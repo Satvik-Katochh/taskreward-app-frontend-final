@@ -1,4 +1,5 @@
 import React from "react";
+import { Toaster } from "react-hot-toast";
 import {
   BrowserRouter as Router,
   Routes,
@@ -19,6 +20,7 @@ const App = () => {
   return (
     <AuthProvider>
       <Router>
+        <Toaster position="bottom-right" />
         <Routes>
           {/* Login Route (No Layout for login) */}
           <Route path="/login" element={<Login />} />

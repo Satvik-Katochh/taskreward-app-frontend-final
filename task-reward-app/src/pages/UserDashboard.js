@@ -29,6 +29,7 @@ const UserDashboard = () => {
 
   useEffect(() => {
     fetchTasks();
+    fetchUserData();
   }, []); // Empty dependency array for only mounting
 
   const fetchUserData = async () => {
@@ -39,6 +40,7 @@ const UserDashboard = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
+      localStorage.setItem("user", JSON.stringify(response.data));
       setUser(response.data);
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -96,13 +98,14 @@ const UserDashboard = () => {
 
     setLoading(true);
     try {
-      await axiosInstance.post(`tasks/${taskId}/upload-screenshot/`, formData, {
+      await axiosInstance.patch(`tasks/${taskId}/complete/`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      toast.success("Screenshot uploaded successfully");
+      toast.success("Screenshot uploaded and points alloted succesfully");
+      fetchUserData();
       fetchTasks();
     } catch (error) {
       console.error("Error uploading screenshot:", error);

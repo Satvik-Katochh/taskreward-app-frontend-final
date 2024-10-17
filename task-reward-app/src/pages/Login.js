@@ -217,11 +217,7 @@ export const Login = () => {
           variants={containerVariants}
         >
           <motion.div style={styles.logoContainer} variants={logoVariants}>
-            <img
-              src="/manufacture.png"
-              alt="Manufacturing Logo"
-              style={styles.logo}
-            />
+            <img src="/benefit.png" alt="Benefit Logo" style={styles.logo} />
           </motion.div>
 
           <motion.div style={styles.loginHeader} variants={formVariants}>

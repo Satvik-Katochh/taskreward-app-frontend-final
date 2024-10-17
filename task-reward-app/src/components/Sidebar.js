@@ -8,8 +8,8 @@ const Sidebar = () => {
       {/* Brand Logo */}
       <a href="#" className="brand-link">
         <img
-          src="/factory_logo.png"
-          alt="SFCS Logo"
+          src="/gift-box.png"
+          alt="Gitf Box Logo"
           className="brand-image img-circle elevation-3"
           style={{ opacity: 1.0 }}
         />
@@ -29,7 +29,7 @@ const Sidebar = () => {
           </div>
           <div className="info">
             <a href="#" className="d-block">
-              Sugumar
+              {user ? user.username : "Loading..."}
             </a>
           </div>
         </div>
@@ -40,7 +40,7 @@ const Sidebar = () => {
             {/* Admin Dashboard */}
             <li className="nav-item">
               <Link to="/admin-dashboard" className="nav-link">
-                <i className="nav-icon fas fa-tachometer-alt"></i>
+                <i class=" nav-icon fa-solid fa-user-gear"></i>
                 <p>Admin Dashboard</p>
               </Link>
             </li>
@@ -48,7 +48,7 @@ const Sidebar = () => {
             {/* User Dashboard */}
             <li className="nav-item">
               <Link to="/user-dashboard" className="nav-link">
-                <i className="nav-icon fas fa-tachometer-alt"></i>
+                <i class=" nav-icon fa-solid fa-user"></i>
                 <p>User Dashboard</p>
               </Link>
             </li>

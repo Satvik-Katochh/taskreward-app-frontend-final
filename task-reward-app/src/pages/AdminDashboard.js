@@ -29,27 +29,8 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (user) {
       fetchApps();
-    } else {
-      fetchUserData();
     }
   }, []);
-
-  const fetchUserData = async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get("profile/", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-      setUser(response.data);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      toast.error("Failed to load admin data");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchApps = async () => {
     setLoading(true);

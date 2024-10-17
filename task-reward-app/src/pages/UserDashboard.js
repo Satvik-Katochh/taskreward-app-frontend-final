@@ -72,7 +72,12 @@ const UserDashboard = () => {
           return (
             <button
               className="btn btn-info btn-sm d-flex align-items-center gap-2"
-              onClick={() => window.open(params?.data?.screenshot, "_blank")}
+              onClick={() =>
+                window.open(
+                  `http://localhost:8000${params?.data?.screenshot}`,
+                  "_blank"
+                )
+              }
             >
               <span>View SS</span>
             </button>
@@ -116,11 +121,17 @@ const UserDashboard = () => {
   }, []);
 
   const fetchUserData = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setUser(null); // Reset user if no token
+      return;
+    }
+
     setLoading(true);
     try {
       const response = await axiosInstance.get("profile/", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       localStorage.setItem("user", JSON.stringify(response.data));
@@ -128,17 +139,23 @@ const UserDashboard = () => {
     } catch (error) {
       console.error("Error fetching user data:", error);
       toast.error("Failed to load user data");
+      setUser(null); // Reset user on failure
     } finally {
       setLoading(false);
     }
   };
 
   const fetchTasks = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return; // If token doesn't exist (user is logged out), don't fetch tasks
+    }
+
     setLoading(true);
     try {
       const response = await axiosInstance.get("tasks/", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
       });
       setTasks(response.data);
@@ -239,7 +256,9 @@ const UserDashboard = () => {
                   <div className="d-flex justify-content-between align-items-center">
                     <div>
                       <h6 className="card-subtitle mb-2">Welcome</h6>
-                      <h2 className="card-title mb-0">{user.username}</h2>
+                      <h2 className="card-title mb-0">
+                        {user ? user.username : "Loading..."}
+                      </h2>
                     </div>
                     <i className="fas fa-user fa-2x opacity-75"></i>
                   </div>
@@ -253,7 +272,7 @@ const UserDashboard = () => {
                   <div className="d-flex justify-content-between align-items-center">
                     <div>
                       <h6 className="card-subtitle mb-2">Total Points</h6>
-                      <h2 className="card-title mb-0">{user.points_earned}</h2>
+                      <h2 className="card-title mb-0">{user?.points_earned}</h2>
                     </div>
                     <i className="fas fa-star fa-2x opacity-75"></i>
                   </div>

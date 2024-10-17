@@ -32,7 +32,34 @@ const AdminDashboard = () => {
     }
   }, []);
 
+  const fetchUserData = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return; // If token doesn't exist (user is logged out), don't fetch user data
+    }
+
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get("profile/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      localStorage.setItem("user", JSON.stringify(response.data));
+      setUser(response.data);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      toast.error("Failed to load user data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchApps = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return; // If token doesn't exist (user is logged out), don't fetch tasks
+    }
     setLoading(true);
     console.log("fetch task api being called");
     try {

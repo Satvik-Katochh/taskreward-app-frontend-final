@@ -28,12 +28,8 @@ const UserDashboard = () => {
   ];
 
   useEffect(() => {
-    if (user) {
-      fetchTasks();
-    } else {
-      fetchUserData();
-    }
-  }, []);
+    fetchTasks();
+  }, []); // Empty dependency array for only mounting
 
   const fetchUserData = async () => {
     setLoading(true);

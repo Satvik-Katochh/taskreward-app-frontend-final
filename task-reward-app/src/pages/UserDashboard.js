@@ -46,7 +46,7 @@ const UserDashboard = () => {
       setUser(response.data);
     } catch (error) {
       console.error("Error fetching user data:", error);
-      toast.error("Failed to load user data");
+      toast.error("Failed to load userxxx data");
     } finally {
       setLoading(false);
     }

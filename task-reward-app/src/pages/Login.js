@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "admin-lte/dist/css/adminlte.min.css";
 import { Eye, EyeOff, User } from "lucide-react";
+import toast from "react-hot-toast";
 
 export const Login = () => {
   const [username, setUsername] = useState("");
@@ -201,9 +202,10 @@ export const Login = () => {
     e.preventDefault();
     try {
       await login(username, password);
+      toast.success("Logged In successfully");
       navigate("/user-dashboard");
     } catch (error) {
-      alert("Failed to log in. Please check your credentials.");
+      toast.error("Failed to log in. Please check your credentials.");
     }
   };
 

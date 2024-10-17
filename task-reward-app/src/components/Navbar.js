@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Tooltip } from "react-tooltip";
 import "react-tooltip/dist/react-tooltip.css";
 import { useAuth } from "../contexts/AuthContext";
+import toast from "react-hot-toast";
 
 const Navbar = () => {
   const { logout } = useAuth(); // Get the logout function from context
@@ -10,10 +11,12 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     try {
-      await logout(); // Call the logout function
-      navigate("/login"); // Redirect to the login page on successful logout
+      await logout();
+      // Call the logout function
+      navigate("/login");
+      toast.success("Logout successful"); // Redirect to the login page on successful logout
     } catch (error) {
-      console.error("Logout failed", error); // Handle any errors if logout fails
+      toast.error("Logout failed", error); // Handle any errors if logout fails
     }
   };
   return (

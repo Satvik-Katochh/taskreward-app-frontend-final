@@ -7,7 +7,7 @@ import { useAuth } from "../contexts/AuthContext";
 import axiosInstance from "../api/axios";
 
 const AdminDashboard = () => {
-  const { user, loading, setLoading } = useAuth();
+  const { user, setUser, loading, setLoading } = useAuth();
   console.log("user", user);
 
   const [apps, setApps] = useState([]);
@@ -27,14 +27,35 @@ const AdminDashboard = () => {
   ];
 
   useEffect(() => {
-    fetchApps();
-  }, []);
+    if (user) {
+      fetchApps();
+    } else {
+      fetchUserData();
+    }
+  }, [user]);
+
+  const fetchUserData = async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get("profile/", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
+      setUser(response.data);
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+      toast.error("Failed to load admin data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchApps = async () => {
     setLoading(true);
     console.log("fetch task api being called");
     try {
-      const response = await axiosInstance.get("/api/apps/", {
+      const response = await axiosInstance.get("apps/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`, // Use the token from localStorage
         },
@@ -68,7 +89,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      await axiosInstance.post("/api/apps/", formData, {
+      await axiosInstance.post("apps/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${localStorage.getItem("token")}`, // Use token from localStorage

@@ -1,21 +1,19 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
-import axios from "axios";
+import "ag-grid-community/styles/ag-theme-material.css";
+import axiosInstance from "../api/axios";
 import toast from "react-hot-toast";
-
 import { useAuth } from "../contexts/AuthContext";
 
 const UserDashboard = () => {
-  const { user, setUser, setLoading } = useAuth();
-
+  const { user, setUser, loading, setLoading } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
 
   const columnDefs = [
-    { headerName: "App", field: "app.name" },
-    { headerName: "Points", field: "app.points" },
+    { headerName: "App", field: "app.name", sortable: true, filter: true },
+    { headerName: "Points", field: "app.points", sortable: true, filter: true },
     {
       headerName: "Actions",
       cellRenderer: (params) => (
@@ -30,14 +28,17 @@ const UserDashboard = () => {
   ];
 
   useEffect(() => {
-    fetchUserData();
-    fetchTasks();
-  }, []);
+    if (user) {
+      fetchTasks();
+    } else {
+      fetchUserData();
+    }
+  }, [user]);
 
   const fetchUserData = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/user/profile/", {
+      const response = await axiosInstance.get("profile/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -54,7 +55,7 @@ const UserDashboard = () => {
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("/api/user/tasks/", {
+      const response = await axiosInstance.get("tasks/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
@@ -67,6 +68,19 @@ const UserDashboard = () => {
       setLoading(false);
     }
   };
+
+  if (loading || !user) {
+    return (
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100vh" }}
+      >
+        <div className="spinner-border text-primary" role="status">
+          <span className="sr-only">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   const handleViewDetails = (task) => {
     setSelectedTask(task);
@@ -86,16 +100,12 @@ const UserDashboard = () => {
 
     setLoading(true);
     try {
-      await axios.post(
-        `/api/user/tasks/${taskId}/upload-screenshot/`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
+      await axiosInstance.post(`tasks/${taskId}/upload-screenshot/`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      });
       toast.success("Screenshot uploaded successfully");
       fetchTasks();
     } catch (error) {
@@ -112,7 +122,7 @@ const UserDashboard = () => {
         <div className="container-fluid">
           <div className="row mb-2">
             <div className="col-sm-6">
-              <h1>User Dashboard</h1>
+              <h1 className="m-0 text-dark">User Dashboard</h1>
             </div>
           </div>
         </div>
@@ -121,36 +131,36 @@ const UserDashboard = () => {
       <section className="content">
         <div className="container-fluid">
           <div className="row">
-            <div className="col-lg-3 col-6">
+            <div className="col-lg-4 col-6">
               <div className="small-box bg-info">
                 <div className="inner">
-                  <h3>{user.name}</h3>
+                  <h3>{user.username}</h3>
                   <p>User Profile</p>
                 </div>
                 <div className="icon">
-                  <i className="fas fa-user"></i>
+                  <i className="nav-icon fa-solid fa-user"></i>
                 </div>
               </div>
             </div>
-            <div className="col-lg-3 col-6">
+            <div className="col-lg-4 col-6">
               <div className="small-box bg-success">
                 <div className="inner">
                   <h3>{user.points_earned}</h3>
                   <p>Points Earned</p>
                 </div>
                 <div className="icon">
-                  <i className="fas fa-star"></i>
+                  <i className="nav-icon fa-solid fa-star"></i>
                 </div>
               </div>
             </div>
-            <div className="col-lg-3 col-6">
+            <div className="col-lg-4 col-6">
               <div className="small-box bg-warning">
                 <div className="inner">
                   <h3>{tasks.filter((t) => t.completed).length}</h3>
                   <p>Tasks Completed</p>
                 </div>
                 <div className="icon">
-                  <i className="fas fa-check-square"></i>
+                  <i className="nav-icon fa-solid fa-check-square"></i>
                 </div>
               </div>
             </div>
@@ -164,12 +174,14 @@ const UserDashboard = () => {
                 </div>
                 <div className="card-body">
                   <div
-                    className="ag-theme-alpine"
+                    className="ag-theme-material"
                     style={{ height: 400, width: "100%" }}
                   >
                     <AgGridReact
                       columnDefs={columnDefs}
                       rowData={tasks}
+                      pagination={true}
+                      paginationPageSize={10}
                       onGridReady={(params) => params.api.sizeColumnsToFit()}
                     />
                   </div>
@@ -194,7 +206,7 @@ const UserDashboard = () => {
                       className="border border-dashed border-secondary rounded p-4 text-center"
                       style={{ minHeight: "150px" }}
                     >
-                      <i className="fas fa-cloud-upload-alt fa-3x mb-3"></i>
+                      <i className="nav-icon fa-solid fa-cloud-upload-alt fa-3x mb-3"></i>
                       <p>Drag and drop screenshot here</p>
                     </div>
                   </div>

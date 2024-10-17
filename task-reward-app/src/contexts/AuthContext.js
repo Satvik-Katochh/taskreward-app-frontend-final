@@ -1,42 +1,44 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
-import axios from "../api/axios";
+import axiosInstance from "../api/axios";
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null); // Store user info after login
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Check for stored token and user info in localStorage on page load
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser)); // Restore user info from localStorage if available
+      setUser(JSON.parse(storedUser));
     }
+    setLoading(false);
   }, []);
 
-  // Login function
   const login = async (username, password) => {
     setLoading(true);
     try {
-      const response = await axios.post("token/", { username, password });
+      const response = await axiosInstance.post("token/", {
+        username,
+        password,
+      });
       const { access } = response.data;
 
-      // Fetch user info from a separate API (or from the response)
-      const userInfoResponse = await axios.get("profile/", {
+      const userInfoResponse = await axiosInstance.get("profile/", {
         headers: { Authorization: `Bearer ${access}` },
       });
 
       const userData = userInfoResponse.data;
 
-      // Save token and user info to localStorage and state
       localStorage.setItem("token", access);
       localStorage.setItem("user", JSON.stringify(userData));
 
-      axios.defaults.headers.common["Authorization"] = `Bearer ${access}`;
+      axiosInstance.defaults.headers.common[
+        "Authorization"
+      ] = `Bearer ${access}`;
 
-      setUser(userData); // Store user info in context
+      setUser(userData);
     } catch (error) {
       console.error("Login error:", error);
       throw error;
@@ -45,16 +47,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Logout function
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    axios.defaults.headers.common["Authorization"] = ""; // Clear auth header
-    setUser(null); // Clear user info
+    axiosInstance.defaults.headers.common["Authorization"] = "";
+    setUser(null);
+  };
+
+  const updateUser = (userData) => {
+    setUser(userData);
+    localStorage.setItem("user", JSON.stringify(userData));
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading, setLoading }}>
+    <AuthContext.Provider
+      value={{ user, setUser, login, logout, loading, setLoading, updateUser }}
+    >
       {loading && <LoadingSpinner />}
       {children}
     </AuthContext.Provider>

@@ -2,12 +2,13 @@ import React, { useState, useEffect, useContext } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import axios from "axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
+import axiosInstance from "../api/axios";
 
 const AdminDashboard = () => {
   const { user, loading, setLoading } = useAuth();
+  console.log("user", user);
 
   const [apps, setApps] = useState([]);
   const [newApp, setNewApp] = useState({
@@ -31,8 +32,9 @@ const AdminDashboard = () => {
 
   const fetchApps = async () => {
     setLoading(true);
+    console.log("fetch task api being called");
     try {
-      const response = await axios.get("/api/apps/", {
+      const response = await axiosInstance.get("/api/apps/", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`, // Use the token from localStorage
         },
@@ -66,7 +68,7 @@ const AdminDashboard = () => {
     }
 
     try {
-      await axios.post("/api/apps/", formData, {
+      await axiosInstance.post("/api/apps/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${localStorage.getItem("token")}`, // Use token from localStorage

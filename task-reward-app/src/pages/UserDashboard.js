@@ -8,11 +8,10 @@ import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 
 const UserDashboard = () => {
-  const { user, setLoading } = useAuth();
+  const { user, setUser, setLoading } = useAuth();
 
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
-  //   const { authTokens } = useContext(AuthContext);
 
   const columnDefs = [
     { headerName: "App", field: "app.name" },
@@ -93,7 +92,7 @@ const UserDashboard = () => {
         {
           headers: {
             "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${authTokens.access}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
       );

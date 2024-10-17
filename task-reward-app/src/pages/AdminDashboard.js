@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
 
 const AdminDashboard = () => {
-  const { user, setLoading } = useAuth();
+  const { user, loading, setLoading } = useAuth();
 
   const [apps, setApps] = useState([]);
   const [newApp, setNewApp] = useState({

@@ -34,3 +34,31 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.upload-zone {
+  border: 2px dashed #dee2e6;
+  cursor: pointer;
+}
+
+.upload-zone:hover {
+  border-color: #6c757d;
+  background-color: #f1f3f5 !important;
+}
+
+.upload-zone.drag-over {
+  border-color: #0d6efd;
+  background-color: #e7f5ff !important;
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

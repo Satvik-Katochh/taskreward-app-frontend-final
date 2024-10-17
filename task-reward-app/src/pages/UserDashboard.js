@@ -1,36 +1,119 @@
 import React, { useState, useEffect } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-material.css";
+import "ag-grid-community/styles/ag-theme-quartz.css";
 import axiosInstance from "../api/axios";
 import toast from "react-hot-toast";
 import { useAuth } from "../contexts/AuthContext";
+import { CheckCircle, XCircle, Upload, Loader2 } from "lucide-react";
 
 const UserDashboard = () => {
   const { user, setUser, loading, setLoading } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
+  const [uploadProgress, setUploadProgress] = useState(false);
 
   const columnDefs = [
-    { headerName: "App", field: "app.name", sortable: true, filter: true },
-    { headerName: "Points", field: "app.points", sortable: true, filter: true },
+    {
+      headerName: "App Name",
+      field: "app.name",
+      sortable: true,
+      filter: true,
+      enableRowGroup: true,
+      menuTabs: ["filterMenuTab", "generalMenuTab", "columnsMenuTab"],
+      width: 200,
+      cellStyle: (params) => {
+        if (params.data.completed) {
+          return { textDecoration: "line-through" };
+        }
+        return null;
+      },
+    },
+    {
+      headerName: "Points",
+      field: "app.points",
+      sortable: true,
+      filter: true,
+      menuTabs: ["filterMenuTab", "generalMenuTab", "columnsMenuTab"],
+      width: 120,
+      cellRenderer: (params) => (
+        <span className="badge bg-primary">{params.value} pts</span>
+      ),
+    },
+    {
+      headerName: "Status",
+      field: "completed",
+      sortable: true,
+      filter: true,
+      menuTabs: ["filterMenuTab", "generalMenuTab", "columnsMenuTab"],
+      width: 140,
+      cellRenderer: (params) => (
+        <div className="d-flex align-items-center gap-2">
+          {params.value ? (
+            <>
+              <CheckCircle className="text-success" size={20} />
+              <span className="text-success">Completed</span>
+            </>
+          ) : (
+            <>
+              <XCircle className="text-danger" size={20} />
+              <span className="text-danger">Pending</span>
+            </>
+          )}
+        </div>
+      ),
+    },
+    {
+      headerName: "View SS",
+      width: 130,
+      cellRenderer: (params) => {
+        console.log("sasas", params.data);
+        if (params.data.screenshot) {
+          return (
+            <button
+              className="btn btn-info btn-sm d-flex align-items-center gap-2"
+              onClick={() => window.open(params?.data?.screenshot, "_blank")}
+            >
+              <span>View SS</span>
+            </button>
+          );
+        } else {
+          return <span>No Screenshot Available</span>;
+        }
+      },
+    },
+
     {
       headerName: "Actions",
+      width: 130,
       cellRenderer: (params) => (
         <button
-          className="btn btn-primary btn-sm"
-          onClick={() => handleViewDetails(params.data)}
+          className={`btn ${
+            params.data.completed ? "btn-secondary" : "btn-primary"
+          } btn-sm d-flex align-items-center gap-2`}
+          onClick={() => handleUpload(params.data)}
+          disabled={params.data.completed}
         >
-          View Details
+          <Upload size={16} />
+          Upload
         </button>
       ),
     },
   ];
 
+  const defaultColDef = {
+    flex: 1,
+    minWidth: 100,
+    sortable: true,
+    filter: true,
+
+    resizable: true,
+  };
+
   useEffect(() => {
     fetchTasks();
     fetchUserData();
-  }, []); // Empty dependency array for only mounting
+  }, []);
 
   const fetchUserData = async () => {
     setLoading(true);
@@ -44,7 +127,7 @@ const UserDashboard = () => {
       setUser(response.data);
     } catch (error) {
       console.error("Error fetching user data:", error);
-      toast.error("Failed to load userxxx data");
+      toast.error("Failed to load user data");
     } finally {
       setLoading(false);
     }
@@ -67,36 +150,44 @@ const UserDashboard = () => {
     }
   };
 
-  if (loading || !user) {
-    return (
-      <div
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "100vh" }}
-      >
-        <div className="spinner-border text-primary" role="status">
-          <span className="sr-only">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-
-  const handleViewDetails = (task) => {
+  const handleUpload = (task) => {
     setSelectedTask(task);
   };
 
   const handleDragOver = (e) => {
     e.preventDefault();
+    e.currentTarget.classList.add("drag-over");
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove("drag-over");
   };
 
   const handleDrop = async (e, taskId) => {
     e.preventDefault();
+    e.currentTarget.classList.remove("drag-over");
     const file = e.dataTransfer.files[0];
     if (!file) return;
+
+    // Check file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please upload an image file");
+      return;
+    }
+
+    // Check file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size should be less than 5MB");
+      return;
+    }
 
     const formData = new FormData();
     formData.append("screenshot", file);
 
-    setLoading(true);
+    setUploadProgress(true);
+    const uploadToast = toast.loading("Uploading screenshot...");
+
     try {
       await axiosInstance.patch(`tasks/${taskId}/complete/`, formData, {
         headers: {
@@ -104,116 +195,168 @@ const UserDashboard = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
-      toast.success("Screenshot uploaded and points alloted succesfully");
-      fetchUserData();
-      fetchTasks();
+
+      toast.dismiss(uploadToast);
+      toast.success(
+        <div>
+          <p className="mb-1">✅ Screenshot uploaded successfully!</p>
+          <p className="mb-1">🎯 Task marked as completed</p>
+          <p className="mb-0">⭐ Points credited to your account</p>
+        </div>,
+        { duration: 4000 }
+      );
+
+      await Promise.all([fetchUserData(), fetchTasks()]);
+      setSelectedTask(null);
     } catch (error) {
-      console.error("Error uploading screenshot:", error);
-      toast.error("Failed to upload screenshot");
+      toast.dismiss(uploadToast);
+      toast.error(
+        error.response?.data?.message || "Failed to upload screenshot"
+      );
     } finally {
-      setLoading(false);
+      setUploadProgress(false);
     }
   };
 
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center min-vh-100">
+        <Loader2 className="animate-spin h-8 w-8 text-primary" />
+      </div>
+    );
+  }
+
   return (
-    <div className="content-wrapper">
-      <section className="content-header">
-        <div className="container-fluid">
-          <div className="row mb-2">
-            <div className="col-sm-6">
-              <h1 className="m-0 text-dark">User Dashboard</h1>
+    <div className="content-wrapper p-4">
+      <section className="content-header mb-4">
+        <div className="container-fluid px-0">
+          <h1 className="text-dark mb-4">User Dashboard</h1>
+
+          <div className="row g-4">
+            <div className="col-lg-4 col-md-6">
+              <div className="card bg-info text-white h-100">
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 className="card-subtitle mb-2">Welcome</h6>
+                      <h2 className="card-title mb-0">{user.username}</h2>
+                    </div>
+                    <i className="fas fa-user fa-2x opacity-75"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-lg-4 col-md-6">
+              <div className="card bg-success text-white h-100">
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 className="card-subtitle mb-2">Total Points</h6>
+                      <h2 className="card-title mb-0">{user.points_earned}</h2>
+                    </div>
+                    <i className="fas fa-star fa-2x opacity-75"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="col-lg-4 col-md-6">
+              <div className="card bg-warning text-white h-100">
+                <div className="card-body">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                      <h6 className="card-subtitle mb-2">Completed Tasks</h6>
+                      <h2 className="card-title mb-0">
+                        {tasks.filter((t) => t.completed).length}
+                      </h2>
+                    </div>
+                    <i className="fas fa-check-square fa-2x opacity-75"></i>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
       <section className="content">
-        <div className="container-fluid">
-          <div className="row">
-            <div className="col-lg-4 col-6">
-              <div className="small-box bg-info">
-                <div className="inner">
-                  <h3>{user.username}</h3>
-                  <p>User Profile</p>
-                </div>
-                <div className="icon">
-                  <i className="nav-icon fa-solid fa-user"></i>
-                </div>
-              </div>
-            </div>
-            <div className="col-lg-4 col-6">
-              <div className="small-box bg-success">
-                <div className="inner">
-                  <h3>{user.points_earned}</h3>
-                  <p>Points Earned</p>
-                </div>
-                <div className="icon">
-                  <i className="nav-icon fa-solid fa-star"></i>
-                </div>
-              </div>
-            </div>
-            <div className="col-lg-4 col-6">
-              <div className="small-box bg-warning">
-                <div className="inner">
-                  <h3>{tasks.filter((t) => t.completed).length}</h3>
-                  <p>Tasks Completed</p>
-                </div>
-                <div className="icon">
-                  <i className="nav-icon fa-solid fa-check-square"></i>
-                </div>
-              </div>
+        <div className="card">
+          <div className="card-header">
+            <h3
+              className="card-title"
+              style={{ fontWeight: "bold", fontSize: "15px" }}
+            >
+              Tasks List
+            </h3>
+          </div>
+          <div className="card-body">
+            <div
+              className="ag-theme-quartz"
+              style={{ height: 300, width: "100%" }}
+            >
+              <AgGridReact
+                columnDefs={columnDefs}
+                rowData={tasks}
+                defaultColDef={defaultColDef}
+                pagination={true}
+                paginationPageSize={10}
+                rowSelection="single"
+                animateRows={true}
+                enableCellTextSelection={true}
+                columnMenu="legacy"
+                onGridReady={(params) => {
+                  params.api.sizeColumnsToFit();
+                }}
+              />
             </div>
           </div>
-
-          <div className="row">
-            <div className="col-12">
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="card-title">Available Tasks</h3>
-                </div>
-                <div className="card-body">
-                  <div
-                    className="ag-theme-material"
-                    style={{ height: 400, width: "100%" }}
-                  >
-                    <AgGridReact
-                      columnDefs={columnDefs}
-                      rowData={tasks}
-                      pagination={true}
-                      paginationPageSize={10}
-                      onGridReady={(params) => params.api.sizeColumnsToFit()}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {selectedTask && (
-            <div className="row mt-4">
-              <div className="col-12">
-                <div className="card">
-                  <div className="card-header">
-                    <h3 className="card-title">
-                      Task Details: {selectedTask.app.name}
-                    </h3>
-                  </div>
-                  <div className="card-body">
-                    <div
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, selectedTask.id)}
-                      className="border border-dashed border-secondary rounded p-4 text-center"
-                      style={{ minHeight: "150px" }}
-                    >
-                      <i className="nav-icon fa-solid fa-cloud-upload-alt fa-3x mb-3"></i>
-                      <p>Drag and drop screenshot here</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
+
+        {selectedTask && (
+          <div className="card mt-4">
+            <div className="card-header d-flex justify-content-between align-items-center">
+              <h3 className="card-title mb-0">
+                Upload Screenshot: {selectedTask.app.name}
+              </h3>
+              <button
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => setSelectedTask(null)}
+              >
+                Close
+              </button>
+            </div>
+            <div className="card-body">
+              <div
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, selectedTask.id)}
+                className="border-2 border-dashed rounded-3 p-5 text-center upload-zone"
+                style={{
+                  minHeight: "200px",
+                  backgroundColor: "#f8f9fa",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                {uploadProgress ? (
+                  <div className="d-flex flex-column align-items-center">
+                    <Loader2 className="animate-spin h-8 w-8 mb-3" />
+                    <p className="mb-0">Uploading screenshot...</p>
+                  </div>
+                ) : (
+                  <>
+                    <Upload size={48} className="mb-3 text-primary" />
+                    <h5>Drag and drop screenshot here</h5>
+                    <p className="text-muted mb-0">or click to select file</p>
+                    <small className="d-block mt-2 text-muted">
+                      Supported formats: PNG, JPG, JPEG (Max size: 5MB)
+                    </small>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

@@ -33,7 +33,7 @@ const UserDashboard = () => {
     } else {
       fetchUserData();
     }
-  }, [user]);
+  }, []);
 
   const fetchUserData = async () => {
     setLoading(true);

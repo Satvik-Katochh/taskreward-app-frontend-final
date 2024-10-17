@@ -32,7 +32,7 @@ const AdminDashboard = () => {
     } else {
       fetchUserData();
     }
-  }, [user]);
+  }, []);
 
   const fetchUserData = async () => {
     setLoading(true);

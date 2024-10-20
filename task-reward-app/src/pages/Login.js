@@ -201,9 +201,15 @@ export const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(username, password);
-      toast.success("Logged In successfully");
-      navigate("/user-dashboard");
+      const user = await login(username, password); // Assuming `login` returns user data
+
+      if (user && user.is_staff) {
+        toast.success("Logged In successfully as Admin");
+        navigate("/admin-dashboard");
+      } else {
+        toast.success("Logged In successfully");
+        navigate("/user-dashboard");
+      }
     } catch (error) {
       toast.error("Failed to log in. Please check your credentials.");
     }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
@@ -8,8 +8,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { CheckCircle, XCircle, Upload, Loader2 } from "lucide-react";
 
 const UserDashboard = () => {
-  const { user, setUser, loading, setLoading } = useAuth();
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(false);
   const fileInputRef = useRef(null);
@@ -23,12 +24,8 @@ const UserDashboard = () => {
       enableRowGroup: true,
       menuTabs: ["filterMenuTab", "generalMenuTab", "columnsMenuTab"],
       width: 200,
-      cellStyle: (params) => {
-        if (params.data.completed) {
-          return { textDecoration: "line-through" };
-        }
-        return null;
-      },
+      cellStyle: (params) =>
+        params.data.completed ? { textDecoration: "line-through" } : null,
     },
     {
       headerName: "Points",
@@ -67,29 +64,18 @@ const UserDashboard = () => {
     {
       headerName: "View SS",
       width: 130,
-      cellRenderer: (params) => {
-        console.log("sasas", params.data);
-        if (params.data.screenshot_url) {
-          // Use screenshot_url here
-          return (
-            <button
-              className="btn btn-info btn-sm d-flex align-items-center gap-2"
-              onClick={() =>
-                window.open(
-                  params.data.screenshot_url, // Open the screenshot_url directly
-                  "_blank"
-                )
-              }
-            >
-              <span>View SS</span>
-            </button>
-          );
-        } else {
-          return <span>No Screenshot Available</span>;
-        }
-      },
+      cellRenderer: (params) =>
+        params.data.screenshot_url ? (
+          <button
+            className="btn btn-info btn-sm d-flex align-items-center gap-2"
+            onClick={() => window.open(params.data.screenshot_url, "_blank")}
+          >
+            <span>View SS</span>
+          </button>
+        ) : (
+          <span>No Screenshot Available</span>
+        ),
     },
-
     {
       headerName: "Actions",
       width: 130,
@@ -113,45 +99,12 @@ const UserDashboard = () => {
     minWidth: 100,
     sortable: true,
     filter: true,
-
     resizable: true,
   };
 
-  useEffect(() => {
-    fetchTasks();
-    fetchUserData();
-  }, []);
-
-  const fetchUserData = async () => {
+  const fetchTasks = useCallback(async () => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      setUser(null); // Reset user if no token
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get("profile/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      localStorage.setItem("user", JSON.stringify(response.data));
-      setUser(response.data);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      toast.error("Failed to load user data");
-      setUser(null); // Reset user on failure
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchTasks = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      return; // If token doesn't exist (user is logged out), don't fetch tasks
-    }
+    if (!token) return;
 
     setLoading(true);
     try {
@@ -167,7 +120,11 @@ const UserDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   const handleUpload = (task) => {
     setSelectedTask(task);
@@ -200,12 +157,10 @@ const UserDashboard = () => {
   };
 
   const uploadFile = async (file, taskId) => {
-    // Check file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload an image file");
       return;
     }
-    // Check file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File size should be less than 5MB");
       return;
@@ -235,7 +190,7 @@ const UserDashboard = () => {
         { duration: 4000 }
       );
 
-      await Promise.all([fetchUserData(), fetchTasks()]);
+      await fetchTasks();
       setSelectedTask(null);
     } catch (error) {
       toast.dismiss(uploadToast);
@@ -340,9 +295,7 @@ const UserDashboard = () => {
                 animateRows={true}
                 enableCellTextSelection={true}
                 columnMenu="legacy"
-                onGridReady={(params) => {
-                  params.api.sizeColumnsToFit();
-                }}
+                onGridReady={(params) => params.api.sizeColumnsToFit()}
               />
             </div>
           </div>

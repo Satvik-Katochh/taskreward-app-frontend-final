@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useEffect } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
@@ -7,13 +7,12 @@ import { useAuth } from "../contexts/AuthContext";
 import axiosInstance from "../api/axios";
 
 const AdminDashboard = () => {
-  const { user, setUser, loading, setLoading } = useAuth();
-  console.log("user", user);
-
+  const { user } = useAuth();
   const [apps, setApps] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [newApp, setNewApp] = useState({
     name: "",
-    package_name: "", // New field for package name
+    package_name: "",
     category: "",
     sub_category: "",
     points: 0,
@@ -26,45 +25,15 @@ const AdminDashboard = () => {
     { headerName: "Points", field: "points", filter: true },
   ];
 
-  useEffect(() => {
-    fetchApps();
-    fetchUserData();
-  }, []);
-
-  const fetchUserData = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      return; // If token doesn't exist (user is logged out), don't fetch user data
-    }
-
-    setLoading(true);
-    try {
-      const response = await axiosInstance.get("profile/", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      localStorage.setItem("user", JSON.stringify(response.data));
-      setUser(response.data);
-    } catch (error) {
-      console.error("Error fetching user data:", error);
-      toast.error("Failed to load user data");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const fetchApps = async () => {
     const token = localStorage.getItem("token");
-    if (!token) {
-      return; // If token doesn't exist (user is logged out), don't fetch tasks
-    }
+    if (!token) return;
+
     setLoading(true);
-    console.log("fetch task api being called");
     try {
       const response = await axiosInstance.get("apps/", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Use the token from localStorage
+          Authorization: `Bearer ${token}`,
         },
       });
       setApps(response.data);
@@ -77,6 +46,11 @@ const AdminDashboard = () => {
     }
   };
 
+  // Single useEffect for initial data fetch
+  useEffect(() => {
+    fetchApps();
+  }, []); // Empty dependency array means this only runs once on mount
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewApp((prev) => ({ ...prev, [name]: value }));
@@ -87,23 +61,22 @@ const AdminDashboard = () => {
     setLoading(true);
 
     const formData = new FormData();
-    for (const key in newApp) {
-      formData.append(key, newApp[key]);
-    }
+    Object.entries(newApp).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
 
     try {
       await axiosInstance.post("apps/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${localStorage.getItem("token")}`, // Use token from localStorage
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       });
       toast.success("App added successfully");
-      fetchApps();
+      await fetchApps(); // Refresh the apps list
       setNewApp({
         name: "",
         package_name: "",
-
         category: "",
         sub_category: "",
         points: 0,

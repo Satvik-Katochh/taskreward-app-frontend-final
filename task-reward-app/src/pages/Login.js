@@ -324,7 +324,7 @@ export const Login = () => {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.7 }}
           >
-            © 2024 Velankani Group. All rights reserved.
+            © 2024 TaskReward. All rights reserved.
           </motion.div>
         </motion.div>
       </div>

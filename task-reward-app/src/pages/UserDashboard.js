@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
@@ -12,6 +12,7 @@ const UserDashboard = () => {
   const [tasks, setTasks] = useState([]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(false);
+  const fileInputRef = useRef(null);
 
   const columnDefs = [
     {
@@ -68,13 +69,14 @@ const UserDashboard = () => {
       width: 130,
       cellRenderer: (params) => {
         console.log("sasas", params.data);
-        if (params.data.screenshot) {
+        if (params.data.screenshot_url) {
+          // Use screenshot_url here
           return (
             <button
               className="btn btn-info btn-sm d-flex align-items-center gap-2"
               onClick={() =>
                 window.open(
-                  `http://localhost:8000${params?.data?.screenshot}`,
+                  params.data.screenshot_url, // Open the screenshot_url directly
                   "_blank"
                 )
               }
@@ -185,14 +187,24 @@ const UserDashboard = () => {
     e.preventDefault();
     e.currentTarget.classList.remove("drag-over");
     const file = e.dataTransfer.files[0];
-    if (!file) return;
+    if (file) {
+      await uploadFile(file, taskId);
+    }
+  };
 
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      await uploadFile(file, selectedTask.id);
+    }
+  };
+
+  const uploadFile = async (file, taskId) => {
     // Check file type
     if (!file.type.startsWith("image/")) {
       toast.error("Please upload an image file");
       return;
     }
-
     // Check file size (5MB limit)
     if (file.size > 5 * 1024 * 1024) {
       toast.error("File size should be less than 5MB");
@@ -233,6 +245,10 @@ const UserDashboard = () => {
     } finally {
       setUploadProgress(false);
     }
+  };
+
+  const handleClickUpload = () => {
+    fileInputRef.current.click();
   };
 
   if (loading) {
@@ -350,11 +366,13 @@ const UserDashboard = () => {
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={(e) => handleDrop(e, selectedTask.id)}
+                onClick={handleClickUpload}
                 className="border-2 border-dashed rounded-3 p-5 text-center upload-zone"
                 style={{
                   minHeight: "200px",
                   backgroundColor: "#f8f9fa",
                   transition: "all 0.2s ease",
+                  cursor: "pointer",
                 }}
               >
                 {uploadProgress ? (
@@ -370,6 +388,13 @@ const UserDashboard = () => {
                     <small className="d-block mt-2 text-muted">
                       Supported formats: PNG, JPG, JPEG (Max size: 5MB)
                     </small>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileSelect}
+                      accept="image/*"
+                      style={{ display: "none" }}
+                    />
                   </>
                 )}
               </div>

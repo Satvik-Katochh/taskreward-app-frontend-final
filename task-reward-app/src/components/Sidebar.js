@@ -34,24 +34,25 @@ const Sidebar = () => {
           </div>
         </div>
 
-        {/* Sidebar Navigation */}
         <nav className="mt-2">
           <ul className="nav nav-pills nav-sidebar flex-column" role="menu">
-            {/* Admin Dashboard */}
-            <li className="nav-item">
-              <Link to="/admin-dashboard" className="nav-link">
-                <i class=" nav-icon fa-solid fa-user-gear"></i>
-                <p>Admin Dashboard</p>
-              </Link>
-            </li>
-
-            {/* User Dashboard */}
-            <li className="nav-item">
-              <Link to="/user-dashboard" className="nav-link">
-                <i class=" nav-icon fa-solid fa-user"></i>
-                <p>User Dashboard</p>
-              </Link>
-            </li>
+            {/* Conditionally Render Admin Dashboard */}
+            {user && user.is_staff ? (
+              <li className="nav-item">
+                <Link to="/admin-dashboard" className="nav-link">
+                  <i className="nav-icon fa-solid fa-user-gear"></i>
+                  <p>Admin Dashboard</p>
+                </Link>
+              </li>
+            ) : (
+              // Render User Dashboard if not admin
+              <li className="nav-item">
+                <Link to="/user-dashboard" className="nav-link">
+                  <i className="nav-icon fa-solid fa-user"></i>
+                  <p>User Dashboard</p>
+                </Link>
+              </li>
+            )}
           </ul>
         </nav>
       </div>

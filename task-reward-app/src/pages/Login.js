@@ -201,13 +201,14 @@ export const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const user = await login(username, password); // Assuming `login` returns user data
+      await login(username, password);
+      const storedUser = JSON.parse(localStorage.getItem("user")); // Assuming `login` returns user data
 
-      if (user && user.is_staff) {
-        toast.success("Logged In successfully as Admin");
+      if (storedUser?.is_staff) {
+        toast.success("Logged In successfully.");
         navigate("/admin-dashboard");
       } else {
-        toast.success("Logged In successfully");
+        toast.success("Logged In successfully.");
         navigate("/user-dashboard");
       }
     } catch (error) {

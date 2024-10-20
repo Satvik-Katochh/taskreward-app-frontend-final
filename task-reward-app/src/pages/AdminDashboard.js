@@ -13,23 +13,22 @@ const AdminDashboard = () => {
   const [apps, setApps] = useState([]);
   const [newApp, setNewApp] = useState({
     name: "",
-    icon: null,
+    package_name: "", // New field for package name
     category: "",
-    subCategory: "",
+    sub_category: "",
     points: 0,
   });
 
   const columnDefs = [
-    { headerName: "App Name", field: "name" },
-    { headerName: "Category", field: "category" },
-    { headerName: "Sub Category", field: "subCategory" },
-    { headerName: "Points", field: "points" },
+    { headerName: "App Name", field: "name", filter: true },
+    { headerName: "Category", field: "category", filter: true },
+    { headerName: "Sub Category", field: "sub_category", filter: true },
+    { headerName: "Points", field: "points", filter: true },
   ];
 
   useEffect(() => {
-    if (user) {
-      fetchApps();
-    }
+    fetchApps();
+    fetchUserData();
   }, []);
 
   const fetchUserData = async () => {
@@ -83,10 +82,6 @@ const AdminDashboard = () => {
     setNewApp((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleImageUpload = (e) => {
-    setNewApp((prev) => ({ ...prev, icon: e.target.files[0] }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -107,9 +102,10 @@ const AdminDashboard = () => {
       fetchApps();
       setNewApp({
         name: "",
-        icon: null,
+        package_name: "",
+
         category: "",
-        subCategory: "",
+        sub_category: "",
         points: 0,
       });
     } catch (error) {
@@ -155,47 +151,40 @@ const AdminDashboard = () => {
                       />
                     </div>
                     <div className="form-group">
-                      <label htmlFor="appIcon">App Icon</label>
-                      <div className="input-group">
-                        <div className="custom-file">
-                          <input
-                            type="file"
-                            className="custom-file-input"
-                            id="appIcon"
-                            onChange={handleImageUpload}
-                          />
-                          <label
-                            className="custom-file-label"
-                            htmlFor="appIcon"
-                          >
-                            Choose file
-                          </label>
-                        </div>
-                      </div>
+                      <label htmlFor="packageName">Package Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="packageName"
+                        name="package_name"
+                        placeholder="Enter package name"
+                        value={newApp.package_name}
+                        onChange={handleInputChange}
+                      />
                     </div>
+
                     <div className="form-group">
                       <label>Category</label>
-                      <select
+                      <input
+                        type="text"
                         className="form-control"
                         name="category"
+                        placeholder="Enter category"
                         value={newApp.category}
                         onChange={handleInputChange}
-                      >
-                        <option value="">Select Category</option>
-                        <option value="Entertainment">Entertainment</option>
-                        <option value="Social Media">Social Media</option>
-                      </select>
+                      />
                     </div>
+
                     <div className="form-group">
                       <label>Sub Category</label>
-                      <select
+                      <input
+                        type="text"
                         className="form-control"
-                        name="subCategory"
-                        value={newApp.subCategory}
+                        name="sub_category"
+                        placeholder="Enter sub category"
+                        value={newApp.sub_category}
                         onChange={handleInputChange}
-                      >
-                        <option value="">Select Sub Category</option>
-                      </select>
+                      />
                     </div>
                     <div className="form-group">
                       <label htmlFor="appPoints">Points</label>
@@ -235,6 +224,7 @@ const AdminDashboard = () => {
                     <AgGridReact
                       columnDefs={columnDefs}
                       rowData={apps}
+                      columnMenu="legacy"
                       onGridReady={(params) => params.api.sizeColumnsToFit()}
                     />
                   </div>

@@ -8,7 +8,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { CheckCircle, XCircle, Upload, Loader2 } from "lucide-react";
 
 const UserDashboard = () => {
-  const { user } = useAuth();
+  const { user, updateUserProfile } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
@@ -189,7 +189,7 @@ const UserDashboard = () => {
         </div>,
         { duration: 4000 }
       );
-
+      await updateUserProfile();
       await fetchTasks();
       setSelectedTask(null);
     } catch (error) {

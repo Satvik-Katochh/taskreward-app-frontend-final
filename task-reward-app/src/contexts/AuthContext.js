@@ -77,6 +77,13 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   }, []);
 
+  const updateUserProfile = async () => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      await fetchUserProfile(token);
+    }
+  };
+
   const value = {
     user,
     setUser,
@@ -84,6 +91,7 @@ export const AuthProvider = ({ children }) => {
     logout,
     loading,
     setLoading,
+    updateUserProfile,
   };
 
   return (

@@ -307,7 +307,7 @@ export const Login = () => {
             </form>
           </motion.div>
 
-          <motion.div
+          {/* <motion.div
             style={styles.footer}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -316,7 +316,7 @@ export const Login = () => {
             <a href="#" style={styles.footerLink}>
               Forgot your password?
             </a>
-          </motion.div>
+          </motion.div> */}
 
           <motion.div
             style={styles.copyright}

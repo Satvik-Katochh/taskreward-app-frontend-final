@@ -206,13 +206,13 @@ const UserDashboard = () => {
     fileInputRef.current.click();
   };
 
-  if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center min-vh-100">
-        <Loader2 className="animate-spin h-8 w-8 text-primary" />
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="d-flex justify-content-center align-items-center min-vh-100">
+  //       <Loader2 className="animate-spin h-8 w-8 text-primary" />
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="content-wrapper p-4">

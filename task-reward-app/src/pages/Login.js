@@ -205,14 +205,20 @@ export const Login = () => {
       const storedUser = JSON.parse(localStorage.getItem("user")); // Assuming `login` returns user data
 
       if (storedUser?.is_staff) {
-        toast.success("Logged In successfully.");
         navigate("/admin-dashboard");
+        setTimeout(() => {
+          toast.success("Logged In successfully.");
+        }, 500);
       } else {
-        toast.success("Logged In successfully.");
         navigate("/user-dashboard");
+        setTimeout(() => {
+          toast.success("Logged In successfully.");
+        }, 500);
       }
     } catch (error) {
-      toast.error("Failed to log in. Please check your credentials.");
+      setTimeout(() => {
+        toast.error("Failed to log in. Please check your credentials.");
+      }, 700);
     }
   };
 
